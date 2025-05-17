@@ -2,32 +2,41 @@ import chromadb
 from chromadb.utils.embedding_functions import SentenceTransformerEmbeddingFunction
 
 # Create a ChromaDB client and embedding function
-chroma_client = chromadb.Client()
+chroma_client = chromadb.Client(
+    chromadb.config.Settings(
+        persist_directory="./chroma_db",  # Directory to store the database
+    )
+)
 model_name = "all-MiniLM-L6-v2"
 embedding_fn = SentenceTransformerEmbeddingFunction(model_name = model_name)
 
 # Create a collection for storing embeddings also known as a vector store or index
 # The collection is a key-value store where the key is the chunk ID and the value is the embedding
-collection = chroma_client.create_collection(
+collection = chroma_client.get_or_create_collection(
     name="pdf_chunks",
     embedding_function=embedding_fn,
 )
 
 
 def embed_chunks(chunks):
-    """
-    Embed the chunks and add them to the ChromaDB collection.
-    Args:
-        chunks (list): List of text chunks to embed.
-    """
-    for i, chunk in enumerate(chunks):
-        # Embed the chunk and add it to the collection
-        collection.add(
-            documents=[chunk],
-            ids=[f"id_{i}"]
-        )
+    existing_ids = set(collection.get(include=[])["ids"])
+    new_chunks = []
 
-def query_index(query : str, k : int = 3):
+    for i, chunk in enumerate(chunks):
+        doc_id = f"id_{i}"
+        if doc_id not in existing_ids:
+            new_chunks.append((doc_id, chunk))
+
+    if new_chunks:
+        ids, docs = zip(*new_chunks)
+        collection.add(documents=list(docs), ids=list(ids))
+        print(f"✅ Added {len(ids)} new chunks.")
+    else:
+        print("🟢 All chunks already embedded — skipping.")
+        
+        
+
+def query_index(query: str, k: int = 3):
     """
     Query the index for the most similar chunks to the query.
     Args:
@@ -36,8 +45,9 @@ def query_index(query : str, k : int = 3):
     Returns:
         list: List of similar chunks.
     """
+    # No need to manually embed; Chroma does it using embedding_fn
     results = collection.query(
-        query_embeddings=[query],
+        query_texts=[query],
         n_results=k
     )
-    return results
+    return results['documents'][0]

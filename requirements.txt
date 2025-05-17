@@ -1,5 +1,6 @@
 transformers
 torch
+accelerate
 sentence-transformers
 chromadb
 PyMuPDF
