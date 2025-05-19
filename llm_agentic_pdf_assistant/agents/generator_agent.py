@@ -7,7 +7,7 @@ class GeneratorAgent:
     A class to generate responses using the TinyLlama model.
     """
     
-    def __init__(self, model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0", local_path = "./local_model", save_model = True):
+    def __init__(self, model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0", local_path = "./local_model/", save_model = True):
         """
         Initialize the generator agent with a model name and local path.
         
@@ -28,11 +28,9 @@ class GeneratorAgent:
         if os.path.exists(self.local_model_path) and \
            os.path.exists(os.path.join(self.local_model_path, "pytorch_model.bin")) and \
            os.path.exists(os.path.join(self.local_model_path, "tokenizer_config.json")):
-            print("✅ Loading model from local folder...")
             self.tokenizer = self._load_tokenizer(self.local_model_path)
             self.model = self._load_model(self.local_model_path)
         else:
-            print("⬇️  Downloading model from Hugging Face...")
             self.tokenizer = self._download_tokenizer(self.model_name)
             self.model = self._download_model(self.model_name)
 

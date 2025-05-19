@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-chroma_store/
+chroma_db/
 local_model/
 
 .DS_Store
